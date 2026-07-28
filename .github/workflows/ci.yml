@@ -1,0 +1,37 @@
+# Integracion continua de HelpDesk Flow (seccion 5.3 de la tarea)
+# - Compila el proyecto
+# - Ejecuta todas las pruebas JUnit 5
+# - Falla cuando una prueba no pasa
+# - Se ejecuta en cada push y pull request
+# - El badge del README mantiene visible el estado de la rama principal
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Compilar y ejecutar pruebas
+        run: mvn --batch-mode clean verify
+
+      - name: Publicar reporte de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-surefire
+          path: target/surefire-reports/
