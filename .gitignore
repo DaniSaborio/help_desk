@@ -7,3 +7,6 @@ target/
 .github/modernize/
 *.zip
 .claude/
+# Salida generada por los benchmarks JMH
+jmh-result.*
+cp.txt
