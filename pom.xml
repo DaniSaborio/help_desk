@@ -18,6 +18,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.10.2</junit.version>
         <javafx.version>21.0.2</javafx.version>
+        <jmh.version>1.37</jmh.version>
     </properties>
 
     <dependencies>
@@ -30,6 +31,20 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- JMH: microbenchmarks de rendimiento de los servicios de dominio.
+             Solo scope test, no forma parte del jar de la aplicacion. -->
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>${jmh.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -47,6 +62,23 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>com.helpdeskflow.app.MainApp</mainClass>
+                </configuration>
+            </plugin>
+            <!-- Ejecuta los benchmarks JMH:  mvn test-compile exec:exec
+                 Usa exec:exec (proceso java real con -classpath) para que el
+                 fork de JMH herede el classpath y encuentre sus clases. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <executable>java</executable>
+                    <classpathScope>test</classpathScope>
+                    <arguments>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>com.helpdeskflow.benchmark.FlujoIncidenciasBenchmark</argument>
+                    </arguments>
                 </configuration>
             </plugin>
         </plugins>
