@@ -3,21 +3,24 @@ package com.helpdeskflow.unitarias;
 import com.helpdeskflow.modelo.*;
 import com.helpdeskflow.repositorio.RepositorioEnMemoria;
 import com.helpdeskflow.servicio.ServicioIncidencias;
+import com.helpdeskflow.servicio.ServicioMetricas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Pruebas unitarias de HU-04 (consultas y filtros). */
+/** Pruebas unitarias de HU-04 (consultas y filtros) y HU-05 (metricas). */
 class ConsultasYMetricasTest {
 
     private ServicioIncidencias servicio;
+    private ServicioMetricas metricas;
 
     @BeforeEach
     void preparar() {
         RepositorioEnMemoria repositorio = new RepositorioEnMemoria();
         servicio = new ServicioIncidencias(repositorio);
+        metricas = new ServicioMetricas(repositorio);
     }
 
     private Incidencia finalizada() {
@@ -45,5 +48,22 @@ class ConsultasYMetricasTest {
         assertEquals(1, servicio.obtenerFinalizadas().size());
         assertEquals(cerrada.getId(), servicio.obtenerFinalizadas().get(0).getId());
         assertThrows(IllegalArgumentException.class, () -> servicio.obtenerObligatoria("id-inexistente"));
+    }
+
+    @Test
+    @DisplayName("Las metricas reflejan totales, throughput, lead time y conteo por prioridad")
+    void metricasBasicas() {
+        servicio.registrar("Mouse danado", "El mouse de recepcion no responde",
+                "Hardware", Impacto.BAJO, Urgencia.BAJA);
+        finalizada();
+
+        assertEquals(2, metricas.total());
+        assertEquals(1, metricas.finalizadas());
+        assertEquals(1, metricas.abiertas());
+        assertEquals(1, metricas.throughput());
+        assertTrue(metricas.leadTimePromedioHoras() >= 0);
+        assertEquals(1L, metricas.porPrioridad().get(Prioridad.CRITICA));
+        assertEquals(1L, metricas.porPrioridad().get(Prioridad.NORMAL));
+        assertEquals(0L, metricas.porPrioridad().get(Prioridad.ALTA));
     }
 }
