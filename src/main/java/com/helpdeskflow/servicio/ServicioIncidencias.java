@@ -5,9 +5,12 @@ import com.helpdeskflow.dominio.ValidadorTransiciones;
 import com.helpdeskflow.modelo.*;
 import com.helpdeskflow.repositorio.RepositorioIncidencias;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
- * Servicio de aplicacion: coordina registro (HU-01), calculo de
- * prioridad (HU-02) y el flujo de estados (HU-03).
+ * Servicio de aplicacion: coordina registro (HU-01), calculo de prioridad
+ * (HU-02), flujo de estados (HU-03) y consultas y filtros (HU-04).
  */
 public class ServicioIncidencias {
 
@@ -53,8 +56,36 @@ public class ServicioIncidencias {
         repositorio.guardar(incidencia);
     }
 
+    // ===== HU-04: consultas y filtros =====
+
+    public List<Incidencia> obtenerTodas() {
+        return repositorio.obtenerTodas();
+    }
+
     public Incidencia obtenerObligatoria(String id) {
         return repositorio.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException("No existe una incidencia con id " + id));
+    }
+
+    public List<Incidencia> filtrarPorEstado(Estado estado) {
+        return filtrar(i -> i.getEstado() == estado);
+    }
+
+    public List<Incidencia> filtrarPorPrioridad(Prioridad prioridad) {
+        return filtrar(i -> i.getPrioridad() == prioridad);
+    }
+
+    public List<Incidencia> obtenerAbiertas() {
+        return filtrar(Incidencia::estaAbierta);
+    }
+
+    public List<Incidencia> obtenerFinalizadas() {
+        return filtrar(i -> !i.estaAbierta());
+    }
+
+    private List<Incidencia> filtrar(java.util.function.Predicate<Incidencia> criterio) {
+        return repositorio.obtenerTodas().stream()
+                .filter(criterio)
+                .collect(Collectors.toList());
     }
 }
