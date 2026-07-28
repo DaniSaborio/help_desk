@@ -1,6 +1,7 @@
 package com.helpdeskflow.servicio;
 
 import com.helpdeskflow.dominio.CalculadoraPrioridad;
+import com.helpdeskflow.dominio.PoliticaExpedite;
 import com.helpdeskflow.dominio.ValidadorTransiciones;
 import com.helpdeskflow.modelo.*;
 import com.helpdeskflow.repositorio.RepositorioIncidencias;
@@ -10,13 +11,15 @@ import java.util.stream.Collectors;
 
 /**
  * Servicio de aplicacion: coordina registro (HU-01), calculo de prioridad
- * (HU-02), flujo de estados (HU-03) y consultas y filtros (HU-04).
+ * (HU-02), flujo de estados (HU-03), consultas y filtros (HU-04) y la
+ * politica EXPEDITE (cambio de requerimiento).
  */
 public class ServicioIncidencias {
 
     private final RepositorioIncidencias repositorio;
     private final CalculadoraPrioridad calculadora = new CalculadoraPrioridad();
     private final ValidadorTransiciones validador = new ValidadorTransiciones();
+    private final PoliticaExpedite politicaExpedite = new PoliticaExpedite();
 
     public ServicioIncidencias(RepositorioIncidencias repositorio) {
         this.repositorio = repositorio;
@@ -43,9 +46,10 @@ public class ServicioIncidencias {
         return incidencia;
     }
 
-    /** HU-03: avanza el estado de una incidencia aplicando el flujo valido. */
+    /** HU-03: avanza el estado de una incidencia aplicando todas las politicas. */
     public void cambiarEstado(String id, Estado destino) {
         Incidencia incidencia = obtenerObligatoria(id);
+        politicaExpedite.validarTransicion(incidencia, destino, repositorio.obtenerTodas());
         validador.transicionar(incidencia, destino);
         repositorio.guardar(incidencia);
     }
@@ -53,6 +57,14 @@ public class ServicioIncidencias {
     public void registrarSolucion(String id, String solucion) {
         Incidencia incidencia = obtenerObligatoria(id);
         incidencia.setSolucion(solucion);
+        repositorio.guardar(incidencia);
+    }
+
+    /** Cambio de requerimiento: marca una incidencia critica como EXPEDITE. */
+    public void marcarExpedite(String id) {
+        Incidencia incidencia = obtenerObligatoria(id);
+        politicaExpedite.validarMarcado(incidencia);
+        incidencia.setClaseServicio(ClaseServicio.EXPEDITE);
         repositorio.guardar(incidencia);
     }
 
