@@ -7,7 +7,7 @@ Sistema de registro, priorizacion, atencion, validacion y cierre de incidencias 
 ## Integrantes
 
 - Alejandro Cordero
-- [Nombre del segundo integrante]
+- Daniel Saborio
 
 ## Descripcion del sistema
 
